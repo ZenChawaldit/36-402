@@ -1,0 +1,277 @@
+---
+title: "36-402 DA Exam 2"
+author: "Chaiyatat (Chawaldit)"
+date: "5/5/2023"
+output: pdf_document
+linestretch: 1.241
+fontsize: 12pt
+---
+
+```{r setup, include = FALSE}
+## By default, do not include R source code in the PDF. We do not want to see
+## code or output, only your text and figures.
+knitr::opts_chunk$set(warning = FALSE,echo = FALSE)
+```
+
+# Introduction
+
+**(1)** Medical care for serious disease can be very expensive. Ideally, patients would get regular check-ups so that serious conditions could be detected and treated early. Public health researchers in Vietnam want to improve the rate of medical check-ups by answering three research questions: 1.) Overall, how do people rate the value and quality of medical service, and the quality of information they receive in check-ups? 2.) What factors appear to make a person less likely to get a check-up every twelve months? 3.) Does the evidence suggest quality of information is an important predictor of whether patient gets check-ups, and does this depend on whether the people has health insurance?
+
+
+**(2)**Briefly mention your final findings. Connect these to the Assistant Minister of Health's substantive questions.
+
+```{r}
+suppressMessages(library(tidyverse))
+suppressMessages(library(ggpubr))
+suppressMessages(library(np))
+patient = read.csv("C:/Users/zench/Desktop/36-402/dataExam2/vietnam-health-cleaned.csv")
+```
+
+
+# Exploratory Data Analysis
+
+1. Explore the key variables you need to conduct your analysis. Describe them
+   with any necessary univariate EDA. Specify which variables you will treat as
+   continuous and which ones you will treat as categorical in your analysis.
+   
+```{r, fig.cap = "Figure 1. Continuous Variable Distribution"}
+#Continous Var = Age, Height, weight, BMI, Tangibles, Empathy, SuitFreq, SuffInfo, AttractInfo, ImpressInfo, PopularInfo 
+histAge = ggplot(patient, aes(x = Age)) +
+  geom_histogram(col = 'black', fill = 'pink', bins = 30) +
+  labs(x = 'Age', y = 'year')
+
+histHeight = ggplot(patient, aes(x = height)) +
+  geom_histogram(col = 'black', fill = 'orange', bins = 30) +
+  labs(x = 'height', y = 'cm')
+
+histWeight = ggplot(patient, aes(x = weight)) +
+  geom_histogram(col = 'black', fill = 'light yellow', bins = 30) +
+  labs(x = 'weight', y = 'kg')
+
+histBMI = ggplot(patient, aes(x = BMI)) +
+  geom_histogram(col = 'black', fill = 'purple', bins = 30) +
+  labs(x = 'BMI', y =  "unit")
+
+histTangibles = ggplot(patient, aes(x = Tangibles)) +
+  geom_histogram(col = 'black', fill = 'pink', bins = 30) +
+  labs(x = 'Tangibles', y = 'rating')
+
+histEmpathy = ggplot(patient, aes(x = Empathy)) +
+  geom_histogram(col = 'black', fill = 'orange', bins = 30) +
+  labs(x = 'Empathy', y = 'rating')
+
+histSuffInfo = ggplot(patient, aes(x = SuffInfo)) +
+  geom_histogram(col = 'black', fill = 'light yellow', bins = 30) +
+  labs(x = 'SuffInfo', y = 'rating')
+
+histAttractInfo = ggplot(patient, aes(x = AttractInfo)) +
+  geom_histogram(col = 'black', fill = 'purple', bins = 30) +
+  labs(x = 'AttractInfo', y = 'rating')
+
+histImpressInfo = ggplot(patient, aes(x = ImpressInfo)) +
+  geom_histogram(col = 'black', fill = 'blue', bins = 30) +
+  labs(x = 'ImpressInfo', y = 'rating')
+
+histPopularInfo = ggplot(patient, aes(x = PopularInfo)) +
+  geom_histogram(col = 'black', fill = 'green', bins = 30) +
+  labs(x = 'PopularInfo', y = 'rating')
+
+ggarrange(histAge,
+          histHeight, histWeight,
+          histBMI,
+          ncol = 2, nrow = 2)
+
+ggarrange(histTangibles,
+          histEmpathy, histSuffInfo,
+          histAttractInfo, histImpressInfo, 
+          histPopularInfo,
+          ncol = 3, nrow = 2)
+```
+
+
+```{r, fig.cap = "Figure 2. Categorical Variable Distribution"}
+patient.place = patient
+patient.place$place = ifelse(patient$place != "hanoi", "others", patient$place)
+place = ggplot(patient.place, aes(x = place)) +
+  geom_bar(color = "black", fill = "blue")
+  
+Sex = ggplot(patient, aes(x = Sex)) +
+  geom_bar(color = "black", fill = "green") 
+
+Jobstt = ggplot(patient, aes(x = Jobstt)) +
+  geom_bar(color = "black", fill = "light blue") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+HealthIns = ggplot(patient, aes(x = HealthIns)) +
+  geom_bar(color = "black", fill = "purple")
+
+Wsttime = ggplot(patient, aes(x = Wsttime)) +
+  geom_bar(color = "black", fill = "grey")
+
+Wstmon = ggplot(patient, aes(x = Wstmon)) +
+  geom_bar(color = "black", fill = "pink")
+
+Lessbelqual = ggplot(patient, aes(x = Lessbelqual)) +
+  geom_bar(color = "black", fill = "yellow")
+
+NotImp = ggplot(patient, aes(x = NotImp)) +
+  geom_bar(color = "black", fill = "white")
+
+HadExam = ggplot(patient, aes(x = HadExam)) +
+  geom_bar(color = "black", fill = "light yellow")
+
+SuitFreq = ggplot(patient, aes(x = SuitFreq)) +
+  geom_bar(color = "black", fill = "orange")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggarrange( SuitFreq, Sex,
+          HealthIns, Wsttime,
+          Wstmon, Jobstt,
+          Lessbelqual, place, 
+          NotImp, HadExam,
+          ncol = 5, nrow = 2)
+
+```
+
+**(1)** The obvious continuous variables are place, Age, Sex, height, weight, and BMI. The obvious categorical Variables are Sex, Jobstt, Healthins, Wsttime, and Wstmon. There is a few ordinal variables namely Tangibles, Empathy, SuitFreq, SuffInfo, AttractInfo, ImpressInfo, PopularInfo. All of these except SuitFreq will be treated as continuously variable for our analysis. **(2)** The response variable for our research question is HadExam, which is also a binary variable. 
+
+**(3)** 
+
+```{r, fig.cap = "Figure 3. Medical Service Value and Quality Categorical Variable Distribution"}
+t.Wsttime = data.frame(name = patient$Wsttime, predictor = "Wsttime")
+t.Wstmon = data.frame(name = patient$Wstmon, predictor = "Wstmon")
+t.Lessbelqual = data.frame(name = patient$Lessbelqual, predictor = "Lessbelqual")
+t.NotImp = data.frame(name = patient$NotImp, predictor = "NotImp")
+
+t.Tangibles = data.frame(rating = patient$Tangibles, predictor = "Tangibles")
+t.Empathy = data.frame(rating = patient$Empathy, predictor = "Empathy")
+t.SuitFreq = data.frame(name = patient$SuitFreq, predictor = "SuitFreq")
+value.bin = rbind(t.Wsttime, t.Wstmon, t.Lessbelqual, 
+              t.NotImp, t.SuitFreq)
+ggplot(value.bin, aes(x = fct_relevel(predictor,"Lessbelqual", "Wstmon", 
+                                      "Wsttime", "NotImp" ,"SuitFreq"), fill = name)) +
+  geom_bar(position = "fill") + labs(x = "Categorical Predictors",y = "percent")
+```
+
+```{r, fig.cap = "Figure 4. Medical Service Value and Quality Continuous Variable Boxplot"}
+value.ord = rbind(t.Tangibles, t.Empathy)
+ggplot(value.ord, aes(x = rating))+
+  geom_histogram(binwidth = 0.1, color ='black', fill = "pink",
+                 aes(y = ..density..)) +
+  facet_grid(.~predictor)
+```
+
+```{r,fig.cap = "Figure 5. Quality of Information Continuous Variable Histogram"}
+t.AttractInfo = data.frame(rating = patient$AttractInfo, predictor = "AttractInfo")
+t.SuffInfo = data.frame(rating = patient$SuffInfo, predictor = "SuffInfo")
+t.ImpressInfo = data.frame(rating = patient$ImpressInfo, predictor = "ImpressInfo")
+t.PopularInfo = data.frame(rating = patient$PopularInfo , predictor = "PopularInfo")
+
+info.ord = rbind(t.AttractInfo, t.SuffInfo, t.ImpressInfo, 
+              t.PopularInfo)
+
+ggplot(info.ord, aes(x = rating))+
+  geom_histogram(binwidth = 0.1, color ='black', fill = "pink",
+                 aes(y = ..density..)) +
+  facet_grid(predictor~.)
+```
+
+
+**(4)**  In terms of how people rate quality of medical service, Wsttime and NotImp distributions between "yes" and "no" are roughly even where as Wstmon and Lessbelqual distributions skew more toward "no" at 73% and 63% respectively. Most response prefer a check-up frequency of 12 months with a significant proportion preferring every 6 months. The rating mode is three for all rating based medical service predictors. In terms of hoe people rate quality of information, the rating mode is also 3 for all rating based predictors. Out these features, it seems all predictors in Quality of Information have roughly the same distribution.
+
+# Initial Modeling and Diagnostics
+
+1. Formulate a generalized linear model that predicts the response variable as a
+   function of all the demographic variables, and the variables regarding the
+   value and quality of medical service. Do *not* include health insurance or
+   the variables about the quality of information presented in check-ups. Call
+   this Model 1.
+   
+**(1)** To better understand our second and third research question, we fit an initial model to predict `HadExam`, which uses all demographic variables except `health insurance` and value and quality of medical service variables. **(2)** Because there are too many variables, we use AIC error estimate stepwise selection to remove statistically insignificant variables. As a result, our model 2 has dropped `Age`, `Sex`, `height`, `weight`, `BMI`, `Wstmon`, `lessbelequal` `Tangibles`,`Empathy`, and `jobstt_unstable`. **(3)** We next create a third model which factors in health insurance and its interactions with quality of information variables to later check if the quality of information variables have different associations between patients with and without health insurance. **(4)** To test goodness of Model 3 fit, we check the null deviance which is 2865.6 on 2067 degrees of freedom, and compare it to the residual deviance is 2403.6 on 2048 degrees of freedom. Because both values are quite large, the null and residual model might not best explain the data. **(5)** We use calibration plot to check that model 3's observed probabilities match the observed proportions of outcome from the data. From the plot, probabilities greater than 0.5 smoothly matches the observed probability while probabilities lower than 0.5 are less in accordance.
+
+   
+```{r}
+#model 1
+library(dplyr)
+m1dt = select(patient , c('HadExam', 'Age', 'Sex', 'Jobstt', 'height', 'weight', 
+                              'BMI', 'Wsttime', 'Wstmon', 'Lessbelqual', 'NotImp',
+                              'Tangibles', 'Empathy', 'SuitFreq'))
+model1 = glm(HadExam ~ ., data=m1dt, family = binomial(link = "logit"))
+#summary(model1)
+#coef(model1)
+```
+
+```{r}
+#model 2
+model2 = step(model1, direction = "both", trace = FALSE)
+#summary(model2)
+#model2$coefficients
+```
+
+```{r}
+#model 3
+m3dt = select(patient, -c('id', 'place', "Age", "Sex", 
+                          "height", "weight", "BMI", "Wstmon", 
+                          "Lessbelqual", "Tangibles", "Empathy"))
+
+
+model3 = glm(HadExam ~ . + HealthIns + SuffInfo + AttractInfo+ ImpressInfo+
+               PopularInfo +HealthIns*SuffInfo + HealthIns*AttractInfo + 
+               HealthIns*ImpressInfo + HealthIns*PopularInfo , data= m3dt, 
+             family = binomial(link = "logit"))
+#summary(model3)
+```
+
+```{r , fig.cap="**(5)** Model 3 Calibartion Plot"}
+#from hw 9 test
+kernel <- npreg(m3dt$HadExam ~ fitted(model3), bws=0.05)
+
+order.m3 <- order(fitted(model3))
+plot(fitted(model3)[order.m3], fitted(kernel)[order.m3], 
+     type = "l",
+xlab="Model 3 y-hat", main="Calibration Plot for Model 3",
+ylab="Smoothed fraction of Y=1", col = "blue")
+rug(fitted(model3))
+abline(0, 1, lty = 3)
+
+```
+
+
+# Model Inference and Results
+
+**(1)** The four interaction terms from Model 3 are respondents with health insurance with rating of the attractiveness of information received, rating of the impressiveness of information received, rating of the popularity of information received, and rating of sufficiency of information received. There respective coefficient and p-values are (-0.009, 0.96), (-0.044, 0.80), (-0.075, 0.63),  and (0.173, 0.28). Since all four coefficients have a p-value greater than .05, we fail to reject their null hypothesises that the interaction terms' coefficient value is zero, and thus do not have a significant effect on response variable. **(2)** Equivalently, we did a chi-square deviance test between model 3 against a simplified version of model 3 without the interaction terms, and the difference in devaince is 1.2818 while the p-value is 0.86, which is greater than 0.05. Therefore, the chi-square deviance test fails to reject the null hypothesis that model 3 is an improvement of the simpilfied version without interaction term. This means the interaction terms are not useful in predicting of `HadExam`. 
+
+```{r}
+model4 = glm(HadExam ~ . , data= m3dt, 
+             family = binomial(link = "logit"))
+# anova(model3, model4, test = "Chisq")
+```
+
+```{r}
+info = c("SuffInfo", "AttractInfo" , "ImpressInfo", 
+  "PopularInfo")
+
+# sum(model3$coefficients[idx])
+# Without Insurance (interaction Term = 0)
+
+with_belief = model4$coefficients[info]
+ratio = exp(sum(with_belief)*5)
+#ratio
+```
+
+**(3)** Following this, we decided to modify model 3 by removing the interaction terms from the model, call model 4.  The sample ratio between the odds of having a checkup for people with the *most* belief in the quality of information (rating each item 5) and the odds for those with the *least* belief in the quality of information (rating each item 1) is 1.508. Because model 4 does not include interaction terms between health insurance and any of the quality of information predictors, this ratio does not depend on whether each person has a health insurance or not. **(4)** The 95% confidence intervals for the odds ratio is (0.1244, 18.2906). This means we are 95% confident that the true ratio between the odds of checking up given most belief and the odds of checking up given least belief in quality of information of check up lies with in this range.
+
+```{r}
+confs = confint(model4)
+intervals = exp(colSums(confs[info,] * 5))
+#intervals
+```
+
+# Conclusions
+  
+  **(1)** To answer our original research questions, from our final model, model 4, the factors that appears to make a person less likely to get a check up are Jobstt_student, Jobstt_unstable, Wsttimeyes, NotImpyes, SuitFreq18m, SuitFreqg18m, ImpressInfo. Of these factors, the statistically significant factors are Jobsttstudent (p = 0.0009), Wsttimeyes (p = 2.17e-5), NotImpyes (p = 3.09e-14) and SuitFreqg18m (p = 1.86e-5), and SuitFreq18m (p = 0.02). From the analysis, being a student increase the log odds of not checking up by 0.84, believing the check up is a waste of times increase the expected log odds of not checking up by 0.43, believing the check up is not important increase the expected log odds of not checking up by 0.77, and believing the suitable check up frequency is greater than 18 months increases the expected log odds of not checking up by 1.11. 
+  
+**(2)** The evidences do not suggest the quality of information is an important predictor of check-ups, because none of all of quality of information predictors has p-value lower than 0.05, thus is not statistically significant. This statistical insignificance does not depend on whether the person has health insurances either as their interaction terms are also statistically insignificant. People who view medical check ups as not important or waste of time do not value medical check ups, and thus do not frequently come. Lastly, people who believe a suitable check up frequency is greater than 18 months are less likely to have a check within the past 12 months, because their people are more likely to prefer to wait up to their suitable check up time before going for a check up, which can be any number of months greater than 18. It is interesting to see no statistical significance between checking up in the past 12 months and the quality of information from the medical check up and whether or not it depends on the person having health insurance. This finding suggests that there is no association between increasing the quality of information or promoting quality of information on the rate of people doing check ups. A possible explanation is because people do not value the quality of information in the check up.
+  
+  
+**(3.)** A limitation on this analysis is the study is an observational study on patients, and was not experimentally designed to test the effect of each predictor on whether the patient has check-up while control the different predictor. This will allow us to make causal inference on the predictor's impact on our response. Another limitation is we can not randomly assign different predictor values (for example assigning job stability for each patient) to each patient, which helps make the predictors independent from each other, and also allows causal inference in our analysis.
